@@ -2,12 +2,13 @@ export const CREATE_NODE = 'CREATE_NODE'
 export const ADD_CHILD = 'ADD_CHILD'
 
 
-let nextId = 0
-export function createNode(component, props) {
+let nextId = 1;
+export function createNode(component, props, isString) {
   return {
     type: CREATE_NODE,
     nodeId: `new_${nextId++}`,
     component,
+    isString,
     props
   }
 }

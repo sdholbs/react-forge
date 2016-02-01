@@ -5,13 +5,16 @@ import RaisedButton from 'material-ui/lib/raised-button';
 import DatePicker from 'material-ui/lib/date-picker/date-picker';
 import { connect } from 'react-redux'
 import TextField from 'material-ui/lib/text-field';
+
+
 export default class Chooser extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       open: false,
       componentSelected: null,
-      componentProps: null
+      componentProps: null,
+      childText: ''
     };
   }
 
@@ -20,13 +23,14 @@ export default class Chooser extends React.Component {
   }
 
   handleClose()  {
-    this.props.onSelection(this.state.componentSelected, this.state.componentProps);
+    this.props.onSelection(this.state.componentSelected, this.state.componentProps, this.state.childText);
   }
 
   _onSelectedComponent(item){
     this.setState({
       componentSelected: item,
-      componentProps: {}
+      componentProps: {},
+      childText: ''
     });
   }
   
@@ -34,8 +38,13 @@ export default class Chooser extends React.Component {
     let componentProps = this.state.componentProps;
     componentProps[key] = value;
     this.setState({
-      componentSelected: this.state.componentSelected,
       componentProps: componentProps
+    })
+  }
+
+  _updateChildText(e){
+    this.setState({
+      childText: e.target.value
     })
   }
 
@@ -59,12 +68,14 @@ export default class Chooser extends React.Component {
 
       dialog = (
         <Dialog
-          title="Select a component"
+          title="Children"
           actions={actions}
           modal={false}
           open={true}
           onRequestClose={this.handleClose.bind(this)} 
           autoScrollBodyContent={true}>
+            <TextField onChange={this._updateChildText.bind(this)} floatingLabelText={"Enter text for child"}value={this.state.childText}/>
+            OR Select a child:
             {components}
         </Dialog>
       );

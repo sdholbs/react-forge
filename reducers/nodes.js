@@ -9,6 +9,7 @@ function node(state, action) {
         id: action.nodeId,
         component: action.component,
         props: action.props,
+        isString: action.isString === true,
         childIds: []
       }
     case ADD_CHILD:

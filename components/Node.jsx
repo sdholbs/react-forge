@@ -1,10 +1,29 @@
-import React from 'react'
+import React, {PropTypes} from 'react'
 import { Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions'
 import RaisedButton from 'material-ui/lib/raised-button';
 import ComponentChooser from './editor/ComponentChooser.jsx';
 import ComponentPrototype from './editor/ComponentPrototype.jsx';
+
+
+function canHaveChildren(component){
+  if(component === 'div'){
+    return true;
+  }
+  if(typeof component === 'string'){
+    return false;
+  }
+  if(component && component.propTypes){
+    return component.propTypes.children === PropTypes.node;
+  }
+  return false;
+}
+
+function isRoot(props){
+  return props.id === 0;
+}
+
 class Node extends Component {
   constructor(props) {
     super(props)
@@ -22,45 +41,70 @@ class Node extends Component {
     });
   }
 
-  _onComponentSelection(component, props){
+  _onComponentSelection(component, props, childText){
     this.setState({
       isChoosingComponent: false
     });
-    const { addChild, createNode, id } = this.props
-    const childId = createNode(component, props).nodeId
+    const { addChild, createNode, id } = this.props;
+    let isString = childText.length > 0;
+    if(isString){
+      component = childText;
+    }
+    const childId = createNode(component, props, isString).nodeId
     addChild(id, childId)
   }
 
   renderChild(childId) {
     let childContent = null;
-    if(this.props.component){
-      childContent = <ComponentPrototype component={this.props.component} props={this.props.props} />
-    }
     return (
-      <li key={childId}>
+      <div key={childId}>
         {childContent}
         <ConnectedNode id={childId} />
-      </li>
+      </div>
     )
   }
 
   render() {
     const { childIds } = this.props
     let chooser = null;
+    let connectedComponent = null;
     if(this.state.isChoosingComponent){
       chooser = <ComponentChooser onSelection={this._onComponentSelection.bind(this)} />;
     }
+    let component = this.props.component;
+    let isAbleToHaveChildren = canHaveChildren(this.props.component);
+    if(isRoot(this.props)){
+      component = 'div';
+      isAbleToHaveChildren = true;
+    }
+    if(this.props.isString){
+      connectedComponent = this.props.component;
+    }else if(component){
+      let addChildButton = null;
+      let children = childIds.map(this.renderChild.bind(this));
+      if(isAbleToHaveChildren){
+        addChildButton = (
+          <div>
+            <div key="add">
+              <RaisedButton onClick={this.handleAddChildClick}>
+                + Add child
+              </RaisedButton>
+            </div>
+          </div>
+        );
+      }
+      connectedComponent = (
+        <ComponentPrototype component={component} props={this.props.props}>
+          {children}
+          {addChildButton}
+        </ComponentPrototype>
+      );
+    } 
+
     return (
       <div>
         {chooser}
-        <ul>
-          {childIds.map(this.renderChild.bind(this))}
-          <li key="add">
-            <a href="#" onClick={this.handleAddChildClick}>
-              Add child
-            </a>
-          </li>
-        </ul>
+        {connectedComponent}
       </div>
     )
   }
